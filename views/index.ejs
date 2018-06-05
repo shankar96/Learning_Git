@@ -1,0 +1,78 @@
+<!-- This is a static file -->
+<!-- served from your routes in server.js -->
+
+<!-- You might want to try something fancier: -->
+<!-- html/nunjucks docs: https://mozilla.github.io/nunjucks/ -->
+<!-- pug: https://pugjs.org/ -->
+<!-- haml: http://haml.info/ -->
+<!-- hbs(handlebars): http://handlebarsjs.com/ -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Welcome to Glitch!</title>
+    <meta name="description" content="A cool thing made with Glitch">
+    <link id="favicon" rel="icon" href="https://glitch.com/edit/favicon-app.ico" type="image/x-icon">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <header>
+      <h1>
+        Link Alexa Account with Niki
+      </h1>
+    </header>
+
+    <main>
+      <p class="bold">Oh hi,</p>
+      <%if (locals.phoneNumber) { %> 
+        <p>Enter The OTP you received</p>
+      <% } else { %>
+      <p>Tell me your Niki PhoneNumber which you want to link to alexa</p>
+      <% } %>
+      <form method="post" action="#">
+        <%if (locals.newUser) { %>
+          <input name="phoneNumber" type="hidden" maxlength="10" value="<%= locals.phoneNumber %>" aria-labelledby="submit-dream" readonly >
+          <input name="otp" type="hidden" maxlength="10" value="<%= locals.otp %>" aria-labelledby="submit-dream">
+          <input name="name" type="text" placeholder="name"  aria-labelledby="submit-dream"  required>
+          <input name="email" type="email"  placeholder="email" aria-labelledby="submit-dream"  required>
+          <input name="accessToken" type="hidden" value="<%= locals.token %>" aria-labelledby="submit-dream"  >
+          <input name="newUserPost" type="hidden" value="true"  aria-labelledby="submit-dream"  >
+          <input name="deviceId" type="hidden" value="<%= locals.token %>"  aria-labelledby="submit-dream"  >
+          <button type="submit" id="submit-dream">Verify</button>
+        <%} else if (locals.phoneNumber ) { %> 
+          <input name="phoneNumber" type="text" maxlength="10" value="<%= locals.phoneNumber %>" aria-labelledby="submit-dream" readonly >
+          <input name="otp" type="password" maxlength="10" value="" placeholder="otp" aria-labelledby="submit-dream">
+          <button type="submit" id="submit-dream">Verify</button>
+        <% } else{ %>
+          <input name="phoneNumber" type="text" maxlength="10" value="" placeholder="phone number" aria-labelledby="submit-dream" required >
+          <button type="submit" id="submit-dream">Link Account</button>
+        <% } %>
+        
+        <input name="body" type="hidden" value="<%= JSON.stringify(locals.body) %>" aria-labelledby="submit-dream">
+        <input name="query" type="hidden"  value="<%= JSON.stringify(locals.query) %>" aria-labelledby="submit-dream">
+        
+        
+      </form>
+      
+      <section class="dreams">
+        <ul id="dreams"></ul>
+      </section>
+    </main>
+
+    <footer>
+      Made with <a href="https://glitch.com">Glitch</a>!
+    </footer>
+    
+    
+    <!-- include the Glitch button to show what the webpage is about and
+          to make it easier for folks to view source and remix -->
+    <div class="glitchButton" style="position:fixed;top:20px;right:20px;"></div>
+    <script src="https://button.glitch.me/button.js"></script>
+
+  </body>
+</html>
