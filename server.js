@@ -112,12 +112,29 @@ app.get("/auth", (request, response) => {
   
   response.render("index",{title:"auth",query:request.query,body:request.body})
 })
+app.get("/register", (request, response) => {
+  log.info("alexa register get",request.body, request.query);
+  
+  response.render("index",{title:"auth",query:request.query,body:request.body})
+})
 app.post("/auth", (request, response) => {
   auth(request,response);
   
 })
+app.post("/register", (request, response) => {
+  log.info("alexa register get",request.body, request.query);
+  register(request,response);
+})
+app.post("/Session/getAccessToken", (request, response) => {
+  log.info("alexa Session/getAccessToken get",request.body, request.query);
+  sendUrlEncodedRequest(sessionUri+"/Session/getAccessToken",request.body,function(body){
+    log.info("response from Session/getAccessToken ",body);
+    response.status(200).json(body)
+  })
+  
+})
 app.post("/", (request, response) => {
-  auth(request,response);
+  register(request,response);
   
 })
 let sessionUri = "http://ec2-34-220-193-219.us-west-2.compute.amazonaws.com:5001";
@@ -179,6 +196,59 @@ log.info("alexa auth post",request.body, request.query);
     response.status(200).json({e:e})
   }
 }
+function register(request,response){
+  log.info("alexa register post",request.body, request.query);
+  let redirectURI;
+  try{
+    let queryParam = JSON.parse(request.body.query)
+    if(request.body.newUserPost){
+      sendRequest(sessionUri+"/register/registerCompletion",request.body,function(body){
+        log.info("Complete registrationn and reditrect ");
+        log.info("response from sessionUri",body);
+        if(body.userId){
+          redirectURI = queryParam.redirect_uri+"?code="+body.userId+"&state="+queryParam.state;
+          log.info("redirectURI with userId as code", redirectURI);
+          response.redirect(redirectURI);
+        }
+      })
+    }
+    else if(request.body.phoneNumber && request.body.otp){
+      log.info("verify and reditrect ");
+      // call otp verifier
+      // then redirect
+      sendRequest(sessionUri+"/register/otpVerification",request.body,function(body){
+        log.info("response from sessionUri",body);
+        if(body.userId){
+          redirectURI = queryParam.redirect_uri+"?code="+body.userId+"&state="+queryParam.state;
+          log.info("redirectURI with userId as code", redirectURI);
+          response.redirect(redirectURI);
+        }else if(body.token){
+          response.render("index",{query:queryParam,phoneNumber:request.body.phoneNumber,otp:request.body.otp,newUser:true,token:body.token});
+          //EMAIL NAME NEW USER CASE
+        }else{
+          response.render("ERROR",{query:queryParam,phoneNumber:request.body.phoneNumber});
+          // ERROR
+        }
+        //getjwt
+        //response.status(200).json({query:request.query,body:request.body,respBody:body});
+      });
+      //response.status(200).json({query:request.query,body:request.body});
+    }
+    else {
+      log.info("start registration ");
+      // call checkRegistration
+      sendRequest(sessionUri+"/register/checkRegistration",request.body,function(body){
+        log.info("response from sessionUri",body);
+        response.render("index",{query:queryParam,phoneNumber:request.body.phoneNumber});
+      });
+      
+    }
+  }
+  catch(e){
+    log.error("error ", e)
+    response.status(200).json({e:e})
+  }
+}
 app.post("/access", (request, response) => {
   log.info("alexa_access_post",request.body, request.query);
   let access_token ="";
@@ -213,8 +283,9 @@ app.post("/access", (request, response) => {
   
   
 })*/
+var request = require("request");
 function sendRequest(url,body,cb){
-  var request = require("request");
+  
 
   var options = { method: 'POST',
     url: url,
@@ -223,6 +294,22 @@ function sendRequest(url,body,cb){
   log.info("postOptions",options);
   request(options, function (error, response, body) {
     if (error) cb(error);
+    cb(body);
+  });
+
+}
+function sendUrlEncodedRequest(url,body,cb){
+  var options = { 
+    method: 'POST',
+    url: url,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded' 
+    },
+    form: body
+  };
+  log.info("postOptions",options);
+  request(options, function (error, response, body) {
+    if (error) throw new Error(error);
     cb(body);
   });
 
